@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  sendCommand: (command) => ipcRenderer.send('command', command),
+  updateStatus: (callback) => ipcRenderer.on('update-status', callback),
 });
