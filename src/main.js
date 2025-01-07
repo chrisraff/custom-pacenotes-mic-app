@@ -8,7 +8,7 @@ let recording = false;
 let missionPath = null;
 let outputPath = null;
 let pacenotesPath = 'pacenotes';
-let i = -1;
+let pacenote_index = -1;
 
 // Start Electron's UI
 app.whenReady().then(() => {
@@ -54,13 +54,14 @@ const server = net.createServer((clientSocket) => {
             return;
           }
           recording = true;
-          i++;
-          startRecording(missionPath, outputPath, i);
+          pacenote_index++;
+          mainWindow.webContents.send('start-recording');
           break;
 
         case 'record_stop':
           recording = false;
           console.log('Recording stopped.');
+          mainWindow.webContents.send('stop-recording');
           break;
 
         case 'mission_end':
@@ -69,8 +70,8 @@ const server = net.createServer((clientSocket) => {
           break;
 
         case 'reset_count':
-          i = parts[1] ? parseInt(parts[1]) - 1 : -1;
-          console.log('Counter reset. Current value:', i);
+          pacenote_index = parts[1] ? parseInt(parts[1]) - 1 : -1;
+          console.log('Counter reset. Current value:', pacenote_index);
           break;
 
         default:
@@ -85,7 +86,7 @@ const server = net.createServer((clientSocket) => {
         missionPath,
         outputPath,
         recording,
-        counter: i,
+        counter: pacenote_index,
       });
     });
   });
@@ -97,7 +98,6 @@ const server = net.createServer((clientSocket) => {
   clientSocket.on('error', (err) => {
     console.error('Socket error:', err);
   });
-  
 });
 
 // Start the server
@@ -105,9 +105,20 @@ const PORT = 43434;
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`Socket server running on 127.0.0.1:${PORT}`);
 });
+ipcMain.on('save-audio', async (_, arrayBuffer) => {
+  const buffer = Buffer.from(arrayBuffer);
 
-// Helper functions
-function startRecording(missionPath, outputPath, index) {
-  console.log(`Starting recording for pacenote_${index} in mission ${missionPath}`);
-  // Implement actual recording logic here using Node.js modules like `mic` or a third-party library
-}
+
+  const pacenotesDir = outputPath ? path.join(outputPath, missionPath, 'pacenotes') : null;
+  if (!fs.existsSync(pacenotesDir)) {
+    fs.mkdirSync(pacenotesDir, { recursive: true });
+    console.log('Pacenotes directory created:', pacenotesDir);
+  }
+
+  const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.webm`) : null;
+
+  if (filePath) {
+    fs.writeFileSync(filePath, Buffer.from(buffer.buffer));
+    console.log('Audio saved to:', filePath);
+  }
+});
