@@ -2,6 +2,12 @@ const net = require('net');
 const fs = require('fs');
 const path = require('path');
 const { app, BrowserWindow, ipcMain } = require('electron');
+const { PassThrough } = require('stream');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('ffmpeg-static');
+
+// Set fluent-ffmpeg to use the bundled FFmpeg binary
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 let mainWindow;
 let recording = false;
@@ -106,8 +112,7 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`Socket server running on 127.0.0.1:${PORT}`);
 });
 ipcMain.on('save-audio', async (_, arrayBuffer) => {
-  const buffer = Buffer.from(arrayBuffer);
-
+  const wavData = await convertWebmToOgg(Buffer.from(arrayBuffer));
 
   const pacenotesDir = outputPath ? path.join(outputPath, missionPath, 'pacenotes') : null;
   if (!fs.existsSync(pacenotesDir)) {
@@ -115,10 +120,44 @@ ipcMain.on('save-audio', async (_, arrayBuffer) => {
     console.log('Pacenotes directory created:', pacenotesDir);
   }
 
-  const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.webm`) : null;
+  // const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.wav`) : null;
+  const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.ogg`) : null;
 
   if (filePath) {
-    fs.writeFileSync(filePath, Buffer.from(buffer.buffer));
+    fs.writeFileSync(filePath, wavData);
     console.log('Audio saved to:', filePath);
   }
 });
+
+async function convertWebmToOgg(rawWebmDataBuffer) {
+  return new Promise((resolve, reject) => {
+    // Create a readable stream from the raw WebM data
+    const inputStream = new PassThrough();
+    inputStream.end(Buffer.from(rawWebmDataBuffer));
+
+    // Create an output stream to collect the OGG data
+    const outputStream = new PassThrough();
+    const oggChunks = [];
+
+    outputStream.on('data', (chunk) => oggChunks.push(chunk));
+    outputStream.on('end', () => {
+      console.log('OGG conversion finished');
+      const oggBuffer = Buffer.concat(oggChunks);
+      resolve(oggBuffer); // Resolve the Promise with the OGG buffer
+    });
+
+    outputStream.on('error', (err) => {
+      console.error('Error during OGG conversion:', err);
+      reject(err); // Reject the Promise on error
+    });
+
+    // Run FFmpeg
+    ffmpeg(inputStream)
+      .format('ogg') // Set output format to OGG
+      .on('error', (err) => {
+        console.error('FFmpeg Error:', err);
+        reject(err); // Reject the Promise if FFmpeg throws an error
+      })
+      .pipe(outputStream, { end: true }); // Pipe FFmpeg output to the writable stream
+  });
+}
