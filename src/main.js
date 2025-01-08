@@ -4,7 +4,8 @@ const path = require('path');
 const { app, BrowserWindow, ipcMain } = require('electron');
 const { PassThrough } = require('stream');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
+
+const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
 
 // Set fluent-ffmpeg to use the bundled FFmpeg binary
 ffmpeg.setFfmpegPath(ffmpegPath);

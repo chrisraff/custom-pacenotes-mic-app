@@ -1,15 +1,35 @@
 {
   "name": "custom-pacenotes-mic-app",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "src/main.js",
+  "author": "SouthernPotato",
+  "description": "Microphone server for use with Custom Rally Pacenotes in BeamNG.drive",
+  "winCodeSign": false,
+  "build": {
+    "appId": "com.southernpotato.custom_pacenotes_mic_app",
+    "productName": "Custom Rally Pacenotes Mic Server",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "allowElevation": true
+    },
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/ffmpeg.exe",
+      "node_modules/ffmpeg-static/index.js",
+      "node_modules/ffmpeg-static/package.json"
+    ]
+  },
   "scripts": {
     "start": "electron ."
   },
-  "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
-    "electron": "^33.3.1"
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
