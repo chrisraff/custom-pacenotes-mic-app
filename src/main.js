@@ -14,7 +14,6 @@ let mainWindow;
 let recording = false;
 let missionPath = null;
 let outputPath = null;
-let pacenotesPath = 'pacenotes';
 let pacenote_index = -1;
 
 // Start Electron's UI
@@ -28,6 +27,8 @@ app.whenReady().then(() => {
   });
 
   mainWindow.loadFile('src/index.html');
+
+  playSound('src/assets/sounds/confirm.wav');
 });
 
 // Socket server logic
@@ -139,26 +140,40 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
     // Create an output stream to collect the OGG data
     const outputStream = new PassThrough();
     const oggChunks = [];
+    let errorOccurred = false;
 
     outputStream.on('data', (chunk) => oggChunks.push(chunk));
+
+    // Wait to resolve or reject until FFmpeg finishes
     outputStream.on('end', () => {
+      if (errorOccurred) {
+        console.error('Skipping saving due to FFmpeg error.');
+        return; // Prevent saving if an error occurred
+      }
       console.log('OGG conversion finished');
       const oggBuffer = Buffer.concat(oggChunks);
-      resolve(oggBuffer); // Resolve the Promise with the OGG buffer
+      resolve(oggBuffer); // Only resolve if no errors occurred
     });
 
     outputStream.on('error', (err) => {
       console.error('Error during OGG conversion:', err);
-      reject(err); // Reject the Promise on error
+      errorOccurred = true; // Mark that an error occurred
+      reject(err); // Reject the Promise on output stream error
     });
 
-    // Run FFmpeg
     ffmpeg(inputStream)
-      .format('ogg') // Set output format to OGG
+      .format('ogg')
       .on('error', (err) => {
         console.error('FFmpeg Error:', err);
-        reject(err); // Reject the Promise if FFmpeg throws an error
+        errorOccurred = true;
+        reject(err); // Reject the Promise and mark an error
       })
-      .pipe(outputStream, { end: true }); // Pipe FFmpeg output to the writable stream
+      .on('end', () => {
+        // Ensure FFmpeg process has completed before checking for errors
+        if (!errorOccurred) {
+          outputStream.end(); // Manually end the stream if no errors
+        }
+      })
+      .pipe(outputStream, { end: false }); // Prevent auto-ending the output stream
   });
 }
