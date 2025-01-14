@@ -27,8 +27,6 @@ app.whenReady().then(() => {
   });
 
   mainWindow.loadFile('src/index.html');
-
-  playSound('src/assets/sounds/confirm.wav');
 });
 
 // Socket server logic

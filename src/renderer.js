@@ -25,18 +25,36 @@ document.addEventListener('DOMContentLoaded', () => {
 async function populateMicrophoneList() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const micSelect = document.getElementById('micSelect');
+
+  // Store the currently selected device ID
+  const previousSelectedDeviceId = micSelect.value;
+
   micSelect.innerHTML = ''; // Clear existing options
+
+  let isPreviousDeviceStillAvailable = false;
 
   devices
     .filter(device => device.kind === 'audioinput')
-    .forEach(device => {
+    .forEach((device, index) => {
       const option = document.createElement('option');
       option.value = device.deviceId;
-      option.textContent = device.label || `Microphone ${micSelect.length + 1}`;
+      option.textContent = device.label || `Microphone ${index + 1}`;
       micSelect.appendChild(option);
+
+      // Check if the previously selected device is still available
+      if (device.deviceId === previousSelectedDeviceId) {
+        isPreviousDeviceStillAvailable = true;
+      }
     });
 
-  selectedDeviceId = micSelect.value;
+  // Reapply the previous selection if the device is still available
+  if (isPreviousDeviceStillAvailable) {
+    micSelect.value = previousSelectedDeviceId;
+  } else {
+    // Update `selectedDeviceId` to the new default if previous is unavailable
+    console.warn('Previously selected device is no longer available. Selecting the first available microphone.');
+    selectedDeviceId = micSelect.value;
+  }
 }
 
 // Handle microphone selection change
