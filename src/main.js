@@ -1,20 +1,37 @@
-const net = require('net');
-const fs = require('fs');
-const path = require('path');
-const { app, BrowserWindow, ipcMain } = require('electron');
-const { PassThrough } = require('stream');
-const ffmpeg = require('fluent-ffmpeg');
+import net from 'net';
+import fs from 'fs';
+import path from 'path';
+import isDev from 'electron-is-dev';
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { PassThrough } from 'stream';
+import { fileURLToPath } from 'url';
+import ffmpeg from 'fluent-ffmpeg';
 
-const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
+import ffmpegStatic from 'ffmpeg-static';
+
+const ffmpegPath = ffmpegStatic.replace('app.asar', 'app.asar.unpacked');
 
 // Set fluent-ffmpeg to use the bundled FFmpeg binary
 ffmpeg.setFfmpegPath(ffmpegPath);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let mainWindow;
 let recording = false;
 let missionPath = null;
 let outputPath = null;
 let pacenote_index = -1;
+
+let confirmSound = null;
+try {
+  const soundPath = isDev
+    ? 'src/assets/sounds/rp_confirm.wav'
+    : path.join(process.resourcesPath, 'app.asar/src/assets/sounds/rp_confirm.wav');
+  confirmSound = fs.readFileSync(soundPath);
+} catch (error) {
+  console.error('Error loading confirm sound:', error);
+}
 
 // Start Electron's UI
 app.whenReady().then(() => {
@@ -170,6 +187,9 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
         // Ensure FFmpeg process has completed before checking for errors
         if (!errorOccurred) {
           outputStream.end(); // Manually end the stream if no errors
+
+          if (confirmSound !== null)
+            mainWindow.webContents.send('play-sound', confirmSound);
         }
       })
       .pipe(outputStream, { end: false }); // Prevent auto-ending the output stream

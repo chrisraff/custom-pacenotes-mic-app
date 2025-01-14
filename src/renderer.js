@@ -17,6 +17,23 @@ window.electronAPI.stopRecording((event) => {
   stopRecording();
 });
 
+window.electronAPI.playSound(async (event, sound) => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    const audioBuffer = await audioContext.decodeAudioData(sound.buffer);
+
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+
+    source.connect(audioContext.destination);
+
+    source.start();
+  } catch (error) {
+    console.error('Error playing WAV data:', error);
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   populateMicrophoneList();
 });

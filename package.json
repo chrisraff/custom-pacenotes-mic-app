@@ -5,6 +5,7 @@
   "author": "SouthernPotato",
   "description": "Microphone server for use with Custom Rally Pacenotes in BeamNG.drive",
   "winCodeSign": false,
+  "type": "module",
   "build": {
     "appId": "com.southernpotato.custom_pacenotes_mic_app",
     "productName": "Custom Rally Pacenotes Mic Server",
@@ -32,6 +33,7 @@
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
+    "electron-is-dev": "^3.0.1",
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.3"
   }
