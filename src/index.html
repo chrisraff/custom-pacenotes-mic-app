@@ -2,11 +2,20 @@
 <html>
 <head>
   <title>Custom Rally Pacenotes Mic Server</title>
+  <style>
+    .hidden {
+      display: none
+    }
+  </style>
 </head>
 <body>
   <h1>Custom Rally Pacenotes Mic Server</h1>
   <select id="micSelect"></select>
   <button onclick="populateMicrophoneList()">🔃</button>
+  <br/>
+  <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
+  <span id="micTestHint" class="hidden">Talk into your mic to check mic quality.</span>
+
   <p id="last-command">Last Command: N/A</p>
   <p id="mission-path">Mission Path: Not set</p>
   <p id="output-path">Output Path: Not set</p>

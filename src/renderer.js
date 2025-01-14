@@ -111,3 +111,67 @@ function stopRecording() {
     console.log('Recording stopped.');
   }
 }
+
+let monitoring = false
+// Mic test
+function toggleMicMonitor() {
+  if (monitoring) {
+    stopMonitor();
+
+    monitoring = false;
+
+    document.querySelector('#micTest').textContent = 'Start Mic Test';
+    document.querySelector('#micTestHint').classList.add('hidden');
+
+  } else {
+    startMonitor();
+
+    monitoring = true;
+
+    document.querySelector('#micTest').textContent = 'Stop Mic Test';
+    document.querySelector('#micTestHint').classList.remove('hidden');
+  }
+}
+
+let monitorAudioContext;
+let monitorGain;
+let monitorMic;
+
+async function startMonitor() {
+  // Check if already monitoring
+  if (monitorAudioContext) {
+    return;
+  }
+
+  // Access the microphone stream
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined },
+  });
+
+  // Create an audio context
+  monitorAudioContext = new AudioContext();
+
+  // Create a source from the microphone stream
+  monitorMic = monitorAudioContext.createMediaStreamSource(stream);
+
+  // Create a gain node for controlling volume
+  monitorGain = monitorAudioContext.createGain();
+  monitorGain.gain.value = 1.0;
+
+  // Connect the microphone to the gain node and then to the audio context's destination
+  monitorMic.connect(monitorGain);
+  monitorGain.connect(monitorAudioContext.destination);
+}
+
+function stopMonitor() {
+  if (monitorAudioContext) {
+    // Disconnect all nodes and close the audio context
+    monitorMic.disconnect();
+    monitorGain.disconnect();
+    monitorAudioContext.close();
+
+    monitorAudioContext = null;
+    monitorMic = null;
+    monitorGain = null;
+  }
+}
