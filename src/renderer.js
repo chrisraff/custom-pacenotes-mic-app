@@ -70,14 +70,29 @@ async function populateMicrophoneList() {
   } else {
     // Update `selectedDeviceId` to the new default if previous is unavailable
     console.warn('Previously selected device is no longer available. Selecting the first available microphone.');
-    selectedDeviceId = micSelect.value;
+    setMic(micSelect.value)
   }
 }
 
 // Handle microphone selection change
 document.getElementById('micSelect').addEventListener('change', (event) => {
-  selectedDeviceId = event.target.value;
+  setMic(event.target.value);
 });
+
+function setMic(value) {
+  if (value == selectedDeviceId)
+    return;
+
+  selectedDeviceId = value;
+
+  document.getElementById('micSelect').value = value;
+
+  if (monitoring)
+  {
+    stopMonitor();
+    startMonitor();
+  }
+}
 
 // Start recording
 async function startRecording() {
@@ -121,7 +136,7 @@ function toggleMicMonitor() {
     monitoring = false;
 
     document.querySelector('#micTest').textContent = 'Start Mic Test';
-    document.querySelector('#micTestHint').classList.add('hidden');
+    document.querySelector('#micTestData').classList.add('hidden');
 
   } else {
     startMonitor();
@@ -129,13 +144,14 @@ function toggleMicMonitor() {
     monitoring = true;
 
     document.querySelector('#micTest').textContent = 'Stop Mic Test';
-    document.querySelector('#micTestHint').classList.remove('hidden');
+    document.querySelector('#micTestData').classList.remove('hidden');
   }
 }
 
 let monitorAudioContext;
 let monitorGain;
 let monitorMic;
+let monitorAnalyser;
 
 async function startMonitor() {
   // Check if already monitoring
@@ -154,6 +170,31 @@ async function startMonitor() {
   // Create a source from the microphone stream
   monitorMic = monitorAudioContext.createMediaStreamSource(stream);
 
+  monitorAnalyser = monitorAudioContext.createAnalyser();
+
+  monitorMic.connect(monitorAnalyser);
+
+  // Configure the analyser
+  monitorAnalyser.fftSize = 256; // The size of the FFT. Smaller = smoother bar
+  const dataArray = new Uint8Array(monitorAnalyser.frequencyBinCount);
+
+  const volumeBar = document.getElementById('volumeBar');
+
+  function updateVolumeBar() {
+    monitorAnalyser.getByteFrequencyData(dataArray);
+
+    // Calculate average volume
+    const avg = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+
+    // Update bar width based on average volume
+    volumeBar.style.width = `${avg}%`;
+
+    // Call again for the next animation frame
+    if (monitoring)
+      requestAnimationFrame(updateVolumeBar);
+  }
+  updateVolumeBar(); // Start the loop
+
   // Create a gain node for controlling volume
   monitorGain = monitorAudioContext.createGain();
   monitorGain.gain.value = 1.0;
@@ -168,6 +209,7 @@ function stopMonitor() {
     // Disconnect all nodes and close the audio context
     monitorMic.disconnect();
     monitorGain.disconnect();
+    monitorAnalyser.disconnect();
     monitorAudioContext.close();
 
     monitorAudioContext = null;
