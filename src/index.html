@@ -209,19 +209,5 @@
   </footer>
 
   <script src="renderer.js"></script>
-  <script>
-    // Simulated Theme Toggle
-    function toggleTheme() {
-      const body = document.body;
-      const currentTheme = body.getAttribute('data-theme') || 'dark';
-      body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
-    }
-
-    // Update Status Indicators
-    function updateLamp(lampId, isActive) {
-      const lamp = document.getElementById(lampId);
-      lamp.classList.toggle('active', isActive);
-    }
-  </script>
 </body>
 </html>

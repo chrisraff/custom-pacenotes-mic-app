@@ -222,3 +222,41 @@ function stopMonitor() {
     isMonitoring = false;
   }
 }
+
+// On startup, load the saved theme from localStorage:
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.body.setAttribute('data-theme', savedTheme);
+  } else {
+    // Fallback to system preference if no saved theme
+    applySystemTheme();
+  }
+}
+
+// Detect system theme on page load
+function applySystemTheme() {
+  const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+  // Apply the detected theme to the body element
+  if (prefersDarkScheme.matches) {
+    applyTheme('dark');
+  } else {
+    applyTheme('light');
+  }
+}
+
+function applyTheme(theme) {
+  theme = theme === 'light' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const currentTheme = body.getAttribute('data-theme') || 'dark';
+  applyTheme(currentTheme === 'light' ? 'dark' : 'light');
+}
+
+// Call the function to set the initial theme
+loadTheme();
