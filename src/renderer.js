@@ -8,7 +8,9 @@ window.electronAPI.updateStatus((event, status) => {
   document.getElementById('output-path').textContent = `Output Path: ${status.outputPath || 'Not set'}`;
   document.getElementById('counter').textContent = `Counter: ${status.counter}`;
 
-  document.getElementById('serverStatusMessage').textContent = status.isHosting ? 'Server Ready' : 'Trying to set up server... is another mic server running?'
+  document.getElementById('serverStatusMessage').textContent = status.hostingStatus;
+  document.getElementById('connectedStatus').classList.toggle('hidden', !status.isHosting);
+  document.getElementById('recordingStatus').classList.toggle('hidden', !status.isHosting);
 
   document.getElementById('recordingLamp').classList.toggle('active', status.recording);
   document.getElementById('isConnectedLamp').classList.toggle('active', status.isConnected);

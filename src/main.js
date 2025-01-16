@@ -25,6 +25,7 @@ let recording = false;
 let missionPath = null;
 let outputPath = null;
 let pacenote_index = -1;
+let hostingStatus = '⏳ Setting up server...';
 let isHosting = false;
 let isConnected = false;
 
@@ -140,6 +141,7 @@ const server = net.createServer((clientSocket) => {
 server.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {
     console.error('Server port already occupied.');
+    hostingStatus = "⚠️ Trying to set up server... Is another mic server running?";
     guiUpdateStatus();
     setTimeout(() => {
       server.close();
@@ -147,6 +149,8 @@ server.on('error', (e) => {
     }, 1000);
   } else {
     console.error(err.message);
+    hostingStatus = "❌ Server couldn't start. Please restart."
+    guiUpdateStatus();
   }
 })
 
@@ -154,6 +158,7 @@ const PORT = 43434;
 server.listen(PORT, '127.0.0.1', () => {
   logWithTimestamp(`Socket server running on 127.0.0.1:${PORT}`);
   isHosting = true;
+  hostingStatus = "Server Ready";
   guiUpdateStatus();
 });
 
@@ -168,6 +173,7 @@ function guiUpdateStatus() {
     recording,
     counter: pacenote_index,
     isHosting,
+    hostingStatus,
     isConnected,
   });
 }
