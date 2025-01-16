@@ -27,11 +27,20 @@ window.electronAPI.playSound(async (event, sound) => {
 
     source.connect(audioContext.destination);
 
+    logWithTimestamp('Starting to play sound');
+
     source.start();
   } catch (error) {
     console.error('Error playing WAV data:', error);
   }
 });
+
+function logWithTimestamp(...message) {
+  const now = new Date();
+  const timestamp = now.toISOString(); // Format: YYYY-MM-DDTHH:mm:ss.sssZ
+  console.log(`[${timestamp}]`);
+  console.log(...message);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   populateMicrophoneList();
@@ -105,7 +114,7 @@ async function startRecording() {
   };
 
   mediaRecorder.onstop = async () => {
-    console.log('Recording stopped. Saving audio...');
+    logWithTimestamp('Recording stopped. Saving audio...');
     const blob = new Blob(audioChunks, { type: 'audio/webm' });
     const arrayBuffer = await blob.arrayBuffer();
 
@@ -116,13 +125,13 @@ async function startRecording() {
   };
 
   mediaRecorder.start();
-  console.log('Recording started...');
+  logWithTimestamp('Recording started...');
 }
 
 function stopRecording() {
   if (mediaRecorder) {
     mediaRecorder.stop();
-    console.log('Recording stopped.');
+    logWithTimestamp('Recording stopped.');
   }
 }
 

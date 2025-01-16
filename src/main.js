@@ -46,13 +46,20 @@ app.whenReady().then(() => {
   mainWindow.loadFile('src/index.html');
 });
 
+function logWithTimestamp(...message) {
+  const now = new Date();
+  const timestamp = now.toISOString(); // Format: YYYY-MM-DDTHH:mm:ss.sssZ
+  console.log(`[${timestamp}]`);
+  console.log(...message);
+}
+
 // Socket server logic
 const server = net.createServer((clientSocket) => {
-  console.log('Client connected:', clientSocket.remoteAddress, clientSocket.remotePort);
+  logWithTimestamp('Client connected:', clientSocket.remoteAddress, clientSocket.remotePort);
 
   clientSocket.on('data', (data) => {
     const message = data.toString('utf-8').trim();
-    console.log('Received message:\n', message, '\n=====================');
+    logWithTimestamp('Received message:\n', message, '\n=====================');
 
     const lines = message.split('\n');
     lines.forEach((line) => {
@@ -63,17 +70,17 @@ const server = net.createServer((clientSocket) => {
       switch (parts[0]) {
         case 'mission':
           missionPath = parts[1];
-          console.log('Mission path set to:', missionPath);
+          logWithTimestamp('Mission path set to:', missionPath);
           break;
 
         case 'data_path':
           outputPath = parts[1];
-          console.log('Output path set to:', outputPath);
+          logWithTimestamp('Output path set to:', outputPath);
           break;
 
         case 'record_start':
           if (!missionPath || !outputPath) {
-            console.log('Mission path or output path not set. Cannot start recording.');
+            logWithTimestamp('Mission path or output path not set. Cannot start recording.');
             return;
           }
           recording = true;
@@ -83,26 +90,26 @@ const server = net.createServer((clientSocket) => {
 
         case 'record_stop':
           recording = false;
-          console.log('Recording stopped.');
+          logWithTimestamp('Recording stopped.');
           mainWindow.webContents.send('stop-recording');
           break;
 
         case 'mission_end':
           missionPath = null;
-          console.log('Mission ended.');
+          logWithTimestamp('Mission ended.');
           break;
 
         case 'reset_count':
           pacenote_index = parts[1] ? parseInt(parts[1]) - 1 : -1;
-          console.log('Counter reset. Current value:', pacenote_index);
+          logWithTimestamp('Counter reset. Current value:', pacenote_index);
           break;
 
         default:
-          console.log('Unknown command:', parts[0]);
+          logWithTimestamp('Unknown command:', parts[0]);
           break;
         }
 
-      console.log('Updating UI');
+      logWithTimestamp('Updating UI');
       // Send update to renderer
       mainWindow.webContents.send('update-status', {
         lastCommand: message,
@@ -115,7 +122,7 @@ const server = net.createServer((clientSocket) => {
   });
 
   clientSocket.on('end', () => {
-    console.log('Client disconnected.');
+    logWithTimestamp('Client disconnected.');
   });
 
   clientSocket.on('error', (err) => {
@@ -126,7 +133,7 @@ const server = net.createServer((clientSocket) => {
 // Start the server
 const PORT = 43434;
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Socket server running on 127.0.0.1:${PORT}`);
+  logWithTimestamp(`Socket server running on 127.0.0.1:${PORT}`);
 });
 ipcMain.on('save-audio', async (_, arrayBuffer) => {
   const wavData = await convertWebmToOgg(Buffer.from(arrayBuffer));
@@ -134,7 +141,7 @@ ipcMain.on('save-audio', async (_, arrayBuffer) => {
   const pacenotesDir = outputPath ? path.join(outputPath, missionPath, 'pacenotes') : null;
   if (!fs.existsSync(pacenotesDir)) {
     fs.mkdirSync(pacenotesDir, { recursive: true });
-    console.log('Pacenotes directory created:', pacenotesDir);
+    logWithTimestamp('Pacenotes directory created:', pacenotesDir);
   }
 
   // const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.wav`) : null;
@@ -142,7 +149,7 @@ ipcMain.on('save-audio', async (_, arrayBuffer) => {
 
   if (filePath) {
     fs.writeFileSync(filePath, wavData);
-    console.log('Audio saved to:', filePath);
+    logWithTimestamp('Audio saved to:', filePath);
   }
 });
 
@@ -165,7 +172,7 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
         console.error('Skipping saving due to FFmpeg error.');
         return; // Prevent saving if an error occurred
       }
-      console.log('OGG conversion finished');
+      logWithTimestamp('OGG conversion finished');
       const oggBuffer = Buffer.concat(oggChunks);
       resolve(oggBuffer); // Only resolve if no errors occurred
     });
@@ -176,9 +183,11 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
       reject(err); // Reject the Promise on output stream error
     });
 
+    logWithTimestamp('Starting ffmpeg conversion');
     ffmpeg(inputStream)
       .format('ogg')
       .on('error', (err) => {
+        logWithTimestamp('ffmpeg error');
         console.error('FFmpeg Error:', err);
         errorOccurred = true;
         reject(err); // Reject the Promise and mark an error
@@ -187,6 +196,7 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
         // Ensure FFmpeg process has completed before checking for errors
         if (!errorOccurred) {
           outputStream.end(); // Manually end the stream if no errors
+          logWithTimestamp('ffmpeg operation completed');
 
           if (confirmSound !== null)
             mainWindow.webContents.send('play-sound', confirmSound);
