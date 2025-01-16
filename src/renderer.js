@@ -1,6 +1,7 @@
 let selectedDeviceId = null;
 let mediaRecorder = null;
 let audioChunks = [];
+let audioContext =  new (window.AudioContext || window.webkitAudioContext)();
 
 window.electronAPI.updateStatus((event, status) => {
   document.getElementById('last-command').textContent = `Last Command: ${status.lastCommand}`;
@@ -19,8 +20,6 @@ window.electronAPI.stopRecording((event) => {
 
 window.electronAPI.playSound(async (event, sound) => {
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
     const audioBuffer = await audioContext.decodeAudioData(sound.buffer);
 
     const source = audioContext.createBufferSource();
@@ -87,7 +86,7 @@ function setMic(value) {
 
   document.getElementById('micSelect').value = value;
 
-  if (monitoring)
+  if (isMonitoring)
   {
     stopMonitor();
     startMonitor();
@@ -127,13 +126,11 @@ function stopRecording() {
   }
 }
 
-let monitoring = false
+let isMonitoring = false;
 // Mic test
 function toggleMicMonitor() {
-  if (monitoring) {
+  if (isMonitoring) {
     stopMonitor();
-
-    monitoring = false;
 
     document.querySelector('#micTest').textContent = 'Start Mic Test';
     document.querySelector('#micTestData').classList.add('hidden');
@@ -141,36 +138,31 @@ function toggleMicMonitor() {
   } else {
     startMonitor();
 
-    monitoring = true;
-
     document.querySelector('#micTest').textContent = 'Stop Mic Test';
     document.querySelector('#micTestData').classList.remove('hidden');
   }
 }
 
-let monitorAudioContext;
 let monitorGain;
 let monitorMic;
 let monitorAnalyser;
 
 async function startMonitor() {
   // Check if already monitoring
-  if (monitorAudioContext) {
+  if (isMonitoring) {
     return;
   }
+  isMonitoring = true;
 
   // Access the microphone stream
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined },
   });
 
-  // Create an audio context
-  monitorAudioContext = new AudioContext();
-
   // Create a source from the microphone stream
-  monitorMic = monitorAudioContext.createMediaStreamSource(stream);
+  monitorMic = audioContext.createMediaStreamSource(stream);
 
-  monitorAnalyser = monitorAudioContext.createAnalyser();
+  monitorAnalyser = audioContext.createAnalyser();
 
   monitorMic.connect(monitorAnalyser);
 
@@ -190,30 +182,29 @@ async function startMonitor() {
     volumeBar.style.width = `${avg}%`;
 
     // Call again for the next animation frame
-    if (monitoring)
+    if (isMonitoring)
       requestAnimationFrame(updateVolumeBar);
   }
   updateVolumeBar(); // Start the loop
 
   // Create a gain node for controlling volume
-  monitorGain = monitorAudioContext.createGain();
+  monitorGain = audioContext.createGain();
   monitorGain.gain.value = 1.0;
 
   // Connect the microphone to the gain node and then to the audio context's destination
   monitorMic.connect(monitorGain);
-  monitorGain.connect(monitorAudioContext.destination);
+  monitorGain.connect(audioContext.destination);
 }
 
 function stopMonitor() {
-  if (monitorAudioContext) {
-    // Disconnect all nodes and close the audio context
+  if (isMonitoring) {
     monitorMic.disconnect();
     monitorGain.disconnect();
     monitorAnalyser.disconnect();
-    monitorAudioContext.close();
 
-    monitorAudioContext = null;
     monitorMic = null;
     monitorGain = null;
+
+    isMonitoring = false;
   }
 }
