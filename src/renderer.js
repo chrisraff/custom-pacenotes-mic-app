@@ -56,9 +56,6 @@ async function populateMicrophoneList() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const micSelect = document.getElementById('micSelect');
 
-  // Store the currently selected device ID
-  const previousSelectedDeviceId = micSelect.value;
-
   micSelect.innerHTML = ''; // Clear existing options
 
   let isPreviousDeviceStillAvailable = false;
@@ -72,14 +69,14 @@ async function populateMicrophoneList() {
       micSelect.appendChild(option);
 
       // Check if the previously selected device is still available
-      if (device.deviceId === previousSelectedDeviceId) {
+      if (device.deviceId === selectedDeviceId) {
         isPreviousDeviceStillAvailable = true;
       }
     });
 
   // Reapply the previous selection if the device is still available
   if (isPreviousDeviceStillAvailable) {
-    micSelect.value = previousSelectedDeviceId;
+    micSelect.value = selectedDeviceId;
   } else {
     // Update `selectedDeviceId` to the new default if previous is unavailable
     console.warn('Previously selected device is no longer available. Selecting the first available microphone.');
@@ -93,6 +90,8 @@ document.getElementById('micSelect').addEventListener('change', (event) => {
 });
 
 function setMic(value) {
+  logWithTimestamp('Setting mic to', value)
+
   if (value == selectedDeviceId)
     return;
 
@@ -104,6 +103,15 @@ function setMic(value) {
   {
     stopMonitor();
     startMonitor();
+  }
+
+  localStorage.setItem('mic', value);
+}
+
+function loadMic() {
+  const savedMic = localStorage.getItem('mic');
+  if (savedMic) {
+    setMic(savedMic);
   }
 }
 
@@ -258,5 +266,6 @@ function toggleTheme() {
   applyTheme(currentTheme === 'light' ? 'dark' : 'light');
 }
 
-// Call the function to set the initial theme
+// Load preferences
 loadTheme();
+loadMic();
