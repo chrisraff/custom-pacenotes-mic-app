@@ -18,10 +18,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow;
+
+// status to share with gui
+let lastCommand = '';
 let recording = false;
 let missionPath = null;
 let outputPath = null;
 let pacenote_index = -1;
+let isHosting = false;
 
 let confirmSound = null;
 try {
@@ -110,14 +114,10 @@ const server = net.createServer((clientSocket) => {
         }
 
       logWithTimestamp('Updating UI');
-      // Send update to renderer
-      mainWindow.webContents.send('update-status', {
-        lastCommand: message,
-        missionPath,
-        outputPath,
-        recording,
-        counter: pacenote_index,
-      });
+
+      // Send update to renderer.
+      lastCommand = message;
+      guiUpdateStatus();
     });
   });
 
@@ -130,11 +130,40 @@ const server = net.createServer((clientSocket) => {
   });
 });
 
-// Start the server
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.error('Server port already occupied.');
+    guiUpdateStatus();
+    setTimeout(() => {
+      server.close();
+      server.listen(PORT, '127.0.0.1');
+    }, 1000);
+  } else {
+    console.error(err.message);
+  }
+})
+
 const PORT = 43434;
 server.listen(PORT, '127.0.0.1', () => {
   logWithTimestamp(`Socket server running on 127.0.0.1:${PORT}`);
+  isHosting = true;
+  guiUpdateStatus();
 });
+
+function guiUpdateStatus() {
+  if (!mainWindow)
+    return;
+
+  mainWindow.webContents.send('update-status', {
+    lastCommand,
+    missionPath,
+    outputPath,
+    recording,
+    counter: pacenote_index,
+    isHosting,
+  });
+}
+
 ipcMain.on('save-audio', async (_, arrayBuffer) => {
   const wavData = await convertWebmToOgg(Buffer.from(arrayBuffer));
 

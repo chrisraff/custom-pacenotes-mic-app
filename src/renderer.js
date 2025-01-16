@@ -9,6 +9,7 @@ window.electronAPI.updateStatus((event, status) => {
   document.getElementById('output-path').textContent = `Output Path: ${status.outputPath || 'Not set'}`;
   document.getElementById('recording').textContent = `Recording: ${status.recording ? 'Yes' : 'No'}`;
   document.getElementById('counter').textContent = `Counter: ${status.counter}`;
+  document.getElementById('isHosting').textContent = status.isHosting ? 'Server Ready' : 'Trying to set up server... is another mic server running?'
 });
 
 window.electronAPI.startRecording((event) => {
