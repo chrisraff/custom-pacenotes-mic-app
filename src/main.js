@@ -26,6 +26,7 @@ let missionPath = null;
 let outputPath = null;
 let pacenote_index = -1;
 let isHosting = false;
+let isConnected = false;
 
 let confirmSound = null;
 try {
@@ -48,6 +49,8 @@ app.whenReady().then(() => {
   });
 
   mainWindow.loadFile('src/index.html');
+
+  guiUpdateStatus();
 });
 
 function logWithTimestamp(...message) {
@@ -60,6 +63,8 @@ function logWithTimestamp(...message) {
 // Socket server logic
 const server = net.createServer((clientSocket) => {
   logWithTimestamp('Client connected:', clientSocket.remoteAddress, clientSocket.remotePort);
+  isConnected = true;
+  guiUpdateStatus();
 
   clientSocket.on('data', (data) => {
     const message = data.toString('utf-8').trim();
@@ -123,6 +128,8 @@ const server = net.createServer((clientSocket) => {
 
   clientSocket.on('end', () => {
     logWithTimestamp('Client disconnected.');
+    isConnected = false;
+    guiUpdateStatus();
   });
 
   clientSocket.on('error', (err) => {
@@ -161,6 +168,7 @@ function guiUpdateStatus() {
     recording,
     counter: pacenote_index,
     isHosting,
+    isConnected,
   });
 }
 

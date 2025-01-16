@@ -10,6 +10,7 @@ window.electronAPI.updateStatus((event, status) => {
   document.getElementById('recording').textContent = `Recording: ${status.recording ? 'Yes' : 'No'}`;
   document.getElementById('counter').textContent = `Counter: ${status.counter}`;
   document.getElementById('isHosting').textContent = status.isHosting ? 'Server Ready' : 'Trying to set up server... is another mic server running?'
+  document.getElementById('isConnected').textContent = `BeamNG Connected: ${status.isConnected ? 'Yes' : 'No'}`;
 });
 
 window.electronAPI.startRecording((event) => {
