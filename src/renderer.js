@@ -4,13 +4,14 @@ let audioChunks = [];
 let audioContext =  new (window.AudioContext || window.webkitAudioContext)();
 
 window.electronAPI.updateStatus((event, status) => {
-  document.getElementById('last-command').textContent = `Last Command: ${status.lastCommand}`;
   document.getElementById('mission-path').textContent = `Mission Path: ${status.missionPath || 'Not set'}`;
   document.getElementById('output-path').textContent = `Output Path: ${status.outputPath || 'Not set'}`;
-  document.getElementById('recording').textContent = `Recording: ${status.recording ? 'Yes' : 'No'}`;
   document.getElementById('counter').textContent = `Counter: ${status.counter}`;
-  document.getElementById('isHosting').textContent = status.isHosting ? 'Server Ready' : 'Trying to set up server... is another mic server running?'
-  document.getElementById('isConnected').textContent = `BeamNG Connected: ${status.isConnected ? 'Yes' : 'No'}`;
+
+  document.getElementById('serverStatusMessage').textContent = status.isHosting ? 'Server Ready' : 'Trying to set up server... is another mic server running?'
+
+  document.getElementById('recordingLamp').classList.toggle('active', status.recording);
+  document.getElementById('isConnectedLamp').classList.toggle('active', status.isConnected);
 });
 
 window.electronAPI.startRecording((event) => {
@@ -181,7 +182,7 @@ async function startMonitor() {
   monitorAnalyser.fftSize = 256; // The size of the FFT. Smaller = smoother bar
   const dataArray = new Uint8Array(monitorAnalyser.frequencyBinCount);
 
-  const volumeBar = document.getElementById('volumeBar');
+  const volumeBar = document.querySelector('#volumeBar>div');
 
   function updateVolumeBar() {
     monitorAnalyser.getByteFrequencyData(dataArray);

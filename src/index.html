@@ -3,31 +3,225 @@
 <head>
   <title>Custom Rally Pacenotes Mic Server</title>
   <style>
+    /* Base Styles */
+    :root {
+      --font-family: 'Arial', sans-serif;
+      --bg-color: #1e1e1e;
+      --text-color: #f0f0f0;
+      --secondary-text-color: #aaa;
+      --accent-color: #0c0;
+      --inactive-color: #555;
+      --border-color: #444;
+      --button-bg: #444;
+      --button-text-color: #fff;
+      --button-bg-hover: #666;
+      --button-bg-disabled: #ccc;
+      --button-text-disabled: #888;
+    }
+
+    /* Dark Theme */
+    [data-theme="light"] {
+      --bg-color: #f0f0f0;
+      --text-color: #333;
+      --secondary-text-color: #666;
+      --accent-color: #0c0;
+      --inactive-color: #ccc;
+      --border-color: #ddd;
+      --button-bg: #f0f0f0;
+      --button-text-color: #333;
+      --button-bg-hover: #ddd;
+    }
+
+    /* Default Button Styles */
+    button, select {
+      background-color: var(--button-bg, #f0f0f0);
+      color: var(--button-text-color, #333);
+      border: 1px solid var(--border-color, #ccc);
+      padding: 2px 12px;
+      font-size: 0.9em;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s, color 0.2s, border 0.2s;
+    }
+
+
+    /* Button Hover Styles */
+    button:hover {
+      background-color: var(--button-bg-hover);
+    }
+
+    /* Disabled Button Styles */
+    button:disabled {
+      background-color: var(--button-bg-disabled);
+      color: var(--button-text-disabled);
+      border: 1px solid #aaa;
+      cursor: not-allowed;
+    }
+
+    /* General Styles */
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header, footer {
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer {
+      border-top: 1px solid var(--border-color);
+      border-bottom: none;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      /* flex-direction: column; */
+      overflow: hidden;
+    }
+
+    #statusPane {
+      flex: 1;
+      padding: 10px 20px;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #recordingLamp {
+      --accent-color: #e00;
+    }
+
+    #detailsPane {
+      flex: 1;
+      padding: 10px 20px;
+      overflow-y: auto;
+      font-size: 0.9em;
+      color: var(--secondary-text-color);
+    }
+
     .hidden {
-      display: none
+      display: none !important;
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-lamp {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: var(--inactive-color);
+      display: inline-block;
+    }
+
+    .status-lamp.active {
+      background-color: var(--accent-color);
+    }
+
+    /* Mic Controls */
+    #micTestData {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #volumeBar {
+      width: 200px;
+      height: 20px;
+      background-color: var(--inactive-color);
+      overflow: hidden;
+      position: relative;
+      border-radius: 4px;
+    }
+
+    #volumeBar div {
+      width: 0;
+      height: 100%;
+      background-color: var(--accent-color);
+      transition: width 0.1s;
     }
   </style>
 </head>
-<body>
-  <h1>Custom Rally Pacenotes Mic Server</h1>
-  <select id="micSelect"></select>
-  <button onclick="populateMicrophoneList()">🔃</button>
-  <br/>
-  <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
-  <div id="micTestData" class="hidden">
-    <span>Talk into your mic to check mic quality.</span>
-    <div style="width: 200px; height: 20px; background-color: #444;">
-      <div id="volumeBar" style="width: 0; max-width: 100%; height: 100%; background: #0c0;"></div>
+<body data-theme="dark">
+  <!-- Top Header -->
+  <header>
+    <div class="status-indicator">
+      <span id="serverStatusMessage">⏳ Setting up server...</span>
     </div>
-  </div>
+    <div class="status-indicator">
+      <span>BeamNG Connected:</span>
+      <div id="isConnectedLamp" class="status-lamp"></div>
+    </div>
+    <div class="status-indicator">
+      <span>Recording:</span>
+      <div id="recordingLamp" class="status-lamp"></div>
+    </div>
+  </header>
 
-  <p id="isHosting">Setting up server...</p>
-  <p id="isConnected">BeamNG Connected: No</p>
-  <p id="last-command">Last Command: N/A</p>
-  <p id="mission-path">Mission Path: Not set</p>
-  <p id="output-path">Output Path: Not set</p>
-  <p id="recording">Recording: No</p>
-  <p id="counter">Counter: 0</p>
+  <!-- Main Content -->
+  <main>
+    <!-- Mic Selection and Testing -->
+    <section id="statusPane">
+      <h2>Microphone Selection</h2>
+      <div style="display: flex; align-items: center;">
+        <select id="micSelect" style="flex-grow: 1; margin: 5px;"></select>
+        <button onclick="populateMicrophoneList()" style="flex-shrink: 0; margin: 5px;">🔃</button>
+      </div>
+
+      <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
+      <div id="micTestData" class="hidden">
+        <span>Talk into your mic to check mic quality.</span>
+        <div id="volumeBar">
+          <div></div> <!-- Actual volume bar -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Server Details Section -->
+    <section id="detailsPane">
+      <h2>Server Details</h2>
+      <p id="mission-path">Mission Path: Not set</p>
+      <p id="output-path">Output Path: Not set</p>
+      <p id="counter">Counter: 0</p>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+  </footer>
+
   <script src="renderer.js"></script>
+  <script>
+    // Simulated Theme Toggle
+    function toggleTheme() {
+      const body = document.body;
+      const currentTheme = body.getAttribute('data-theme') || 'dark';
+      body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+    }
+
+    // Update Status Indicators
+    function updateLamp(lampId, isActive) {
+      const lamp = document.getElementById(lampId);
+      lamp.classList.toggle('active', isActive);
+    }
+  </script>
 </body>
 </html>
