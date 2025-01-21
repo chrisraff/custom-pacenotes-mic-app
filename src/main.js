@@ -1,6 +1,8 @@
 import net from 'net';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import { Readable } from 'stream';
 import isDev from 'electron-is-dev';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { PassThrough } from 'stream';
@@ -29,14 +31,26 @@ let hostingStatus = '⏳ Setting up server...';
 let isHosting = false;
 let isConnected = false;
 
+function getAssetPath(asset) {
+  return isDev
+    ? path.join(__dirname, asset)
+    : path.join(process.resourcesPath, 'app.asar/src', asset);
+}
+
 let confirmSound = null;
 try {
-  const soundPath = isDev
-    ? 'src/assets/sounds/rp_confirm.wav'
-    : path.join(process.resourcesPath, 'app.asar/src/assets/sounds/rp_confirm.wav');
+  const soundPath = getAssetPath('assets/sounds/rp_confirm.wav');
   confirmSound = fs.readFileSync(soundPath);
 } catch (error) {
   console.error('Error loading confirm sound:', error);
+}
+
+let preWarmSound = null;
+try {
+  const soundPath = getAssetPath('assets/sounds/prewarm.webm');
+  preWarmSound = fs.readFileSync(soundPath);
+} catch (error) {
+  console.error('Error loading prewarm sound:', error);
 }
 
 // Start Electron's UI
@@ -247,4 +261,41 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
       })
       .pipe(outputStream, { end: false }); // Prevent auto-ending the output stream
   });
+}
+
+// FFmpeg can be slow on first use, so we pre-warm it with a dummy conversion
+function warmupFFmpeg(webmBuffer) {
+  const tempDir = os.tmpdir(); // System temporary directory
+  const outputPath = path.join(tempDir, 'temp.ogg'); // Temporary output file
+
+  const inputStream = Readable.from(webmBuffer);
+
+  logWithTimestamp('Prewarming FFmpeg');
+
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputStream)
+      .inputFormat('webm')
+      .format('ogg')
+      .output(outputPath)
+      .on('end', () => {
+        logWithTimestamp('FFmpeg warm-up complete');
+        fs.unlink(outputPath, (err) => {
+          if (err) {
+            console.error('Error cleaning up temp file:', err);
+          }
+        });
+        resolve();
+      })
+      .on('error', (err) => {
+        console.error('FFmpeg warm-up error:', err);
+        reject(err);
+      })
+      .run();
+  });
+}
+
+if (!!preWarmSound) {
+  warmupFFmpeg(preWarmSound)
+    .then(() => logWithTimestamp('FFmpeg is warmed up and ready'))
+    .catch((err) => console.error('FFmpeg warm-up failed:', err));
 }
