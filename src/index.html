@@ -167,6 +167,10 @@
       display: none !important;
     }
 
+    .secondary-text {
+      color: var(--secondary-text-color);
+    }
+
     /* Status Indicators */
     .status-indicator {
       display: flex;
@@ -261,7 +265,7 @@
      <section id="terminal">
       <h2>Client Messages</h2>
       <div id="terminalOutput">
-        <div id="terminal-hint" style="color: var(--secondary-text-color);">
+        <div id="terminal-hint" class="secondary-text">
           Not connected to BeamNG.drive. Please start the game and connect through the Pacenotes Editor UI app.
           Install the Custom Rally Pacenotes mod if you do not have it.
         </div>
@@ -272,6 +276,11 @@
   <!-- Footer -->
   <footer>
     <button onclick="toggleTheme()">Toggle Theme</button>
+
+    <div class="secondary-text" style="font-size: 70%;">
+      <span>Custom Rally Pacenotes Mic Server</span>
+      <span id="version">-.-.-</span>
+    </div>
   </footer>
 
   <script src="renderer.js"></script>

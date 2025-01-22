@@ -22,7 +22,6 @@ const __dirname = path.dirname(__filename);
 let mainWindow;
 
 // status to share with gui
-let lastCommand = '';
 let recording = false;
 let missionPath = null;
 let outputPath = null;
@@ -67,7 +66,7 @@ app.whenReady().then(() => {
   mainWindow.loadFile('src/index.html');
 
   mainWindow.webContents.once('did-finish-load', () => {
-    guiUpdateStatus();
+    guiUpdateStatus({version: app.getVersion()});
 
     if (!!confirmSound) {
       mainWindow.webContents.send('audio-data-confirm', confirmSound);
@@ -145,7 +144,6 @@ const server = net.createServer((clientSocket) => {
       logWithTimestamp('Updating UI');
 
       // Send update to renderer.
-      lastCommand = message;
       guiUpdateStatus();
     });
   });
@@ -185,12 +183,11 @@ server.listen(PORT, '127.0.0.1', () => {
   guiUpdateStatus();
 });
 
-function guiUpdateStatus() {
+function guiUpdateStatus(additionalStatus = {}) {
   if (!mainWindow)
     return;
 
   mainWindow.webContents.send('update-status', {
-    lastCommand,
     missionPath,
     outputPath,
     recording,
@@ -198,6 +195,7 @@ function guiUpdateStatus() {
     isHosting,
     hostingStatus,
     isConnected,
+    ...additionalStatus,
   });
 }
 

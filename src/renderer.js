@@ -16,6 +16,10 @@ window.electronAPI.updateStatus((event, status) => {
 
   document.getElementById('recordingLamp').classList.toggle('active', status.recording);
   document.getElementById('isConnectedLamp').classList.toggle('active', status.isConnected);
+
+  if (status.version) {
+    document.getElementById('version').textContent = `${status.version}`;
+  }
 });
 
 window.electronAPI.addTerminalEntry((event, message) => {
