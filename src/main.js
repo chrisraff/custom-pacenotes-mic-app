@@ -58,6 +58,7 @@ app.whenReady().then(() => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    icon: getAssetPath('assets/images/mic-server.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },

@@ -22,7 +22,8 @@
       "node_modules/ffmpeg-static/ffmpeg.exe",
       "node_modules/ffmpeg-static/index.js",
       "node_modules/ffmpeg-static/package.json"
-    ]
+    ],
+    "icon": "src/assets/images/mic-server.ico"
   },
   "scripts": {
     "start": "electron ."
