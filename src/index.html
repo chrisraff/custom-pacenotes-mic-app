@@ -17,19 +17,20 @@
       --button-bg-hover: #666;
       --button-bg-disabled: #ccc;
       --button-text-disabled: #888;
+      --terminal-bg: #0e0e0e;
     }
 
-    /* Dark Theme */
+    /* Light Theme */
     [data-theme="light"] {
       --bg-color: #f0f0f0;
       --text-color: #333;
       --secondary-text-color: #666;
-      --accent-color: #0c0;
       --inactive-color: #ccc;
       --border-color: #ddd;
       --button-bg: #f0f0f0;
       --button-text-color: #333;
       --button-bg-hover: #ddd;
+      --terminal-bg: #fff;
     }
 
     /* Default Button Styles */
@@ -85,7 +86,7 @@
     main {
       flex: 1;
       display: flex;
-      /* flex-direction: column; */
+      flex-direction: column;
       overflow: hidden;
     }
 
@@ -108,6 +109,58 @@
       overflow-y: auto;
       font-size: 0.9em;
       color: var(--secondary-text-color);
+    }
+
+    #terminal {
+      flex: 1; /* Take up the remaining space in the main container */
+      display: flex;
+      flex-direction: column;
+      background-color: var(--terminal-bg);
+      color: var(--text-color);
+      /* padding: 10px; */
+      overflow: hidden; /* Prevent content from overflowing the container */
+    }
+
+    #terminal h2 {
+      background-color: var(--bg-color);
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      margin: 0;
+      padding: 5px 10px;
+      font-size: 1em;
+    }
+
+    #terminalOutput {
+      flex: 1; /* Fills the remaining vertical space */
+      overflow-y: auto; /* Scrollable content */
+      padding: 10px;
+      background-color: var(--terminal-bg);
+      color: var(--text-color);
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .log-entry {
+      display: flex;
+      align-items: baseline; /* Align timestamp and message properly */
+      margin-bottom: 5px; /* Space between log entries */
+    }
+
+    .timestamp {
+      color: var(--secondary-text-color);
+      margin-right: 10px;
+      white-space: nowrap; /* Prevent timestamp from wrapping */
+    }
+
+    .message {
+      color: var(--text-color);
+      flex: 1; /* Message takes up remaining horizontal space */
+      word-wrap: break-word;
+    }
+
+    .flex-row {
+      display: flex;
+      flex-direction: row;
     }
 
     .hidden {
@@ -178,28 +231,41 @@
   <!-- Main Content -->
   <main>
     <!-- Mic Selection and Testing -->
-    <section id="statusPane">
-      <h2>Microphone Selection</h2>
-      <div style="display: flex; align-items: center;">
-        <select id="micSelect" style="flex-grow: 1; margin: 5px;"></select>
-        <button onclick="populateMicrophoneList()" style="flex-shrink: 0; margin: 5px;">🔃</button>
-      </div>
+     <section class="flex-row">
+       <section id="statusPane">
+         <h2>Microphone Selection</h2>
+         <div style="display: flex; align-items: center;">
+           <select id="micSelect" style="flex-grow: 1; margin: 5px;"></select>
+           <button onclick="populateMicrophoneList()" style="flex-shrink: 0; margin: 5px;">🔃</button>
+         </div>
 
-      <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
-      <div id="micTestData" class="hidden">
-        <span>Talk into your mic to check mic quality.</span>
-        <div id="volumeBar">
-          <div></div> <!-- Actual volume bar -->
+         <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
+         <div id="micTestData" class="hidden">
+           <span>Talk into your mic to check mic quality.</span>
+           <div id="volumeBar">
+             <div></div> <!-- Actual volume bar -->
+           </div>
+         </div>
+       </section>
+
+      <!-- Server Details Section -->
+      <section id="detailsPane">
+        <h2>Server Details</h2>
+        <p id="mission-path">Mission Path: Not set</p>
+        <p id="output-path">Output Path: Not set</p>
+        <p id="counter">Counter: 0</p>
+      </section>
+     </section>
+
+    <!-- Terminal Output -->
+     <section id="terminal">
+      <h2>Client Messages</h2>
+      <div id="terminalOutput">
+        <div id="terminal-hint" style="color: var(--secondary-text-color);">
+          Not connected to BeamNG.drive. Please start the game and connect through the Pacenotes Editor UI app.
+          Install the Custom Rally Pacenotes mod if you do not have it.
         </div>
       </div>
-    </section>
-
-    <!-- Server Details Section -->
-    <section id="detailsPane">
-      <h2>Server Details</h2>
-      <p id="mission-path">Mission Path: Not set</p>
-      <p id="output-path">Output Path: Not set</p>
-      <p id="counter">Counter: 0</p>
     </section>
   </main>
 

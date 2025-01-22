@@ -18,6 +18,10 @@ window.electronAPI.updateStatus((event, status) => {
   document.getElementById('isConnectedLamp').classList.toggle('active', status.isConnected);
 });
 
+window.electronAPI.addTerminalEntry((event, message) => {
+  addTerminalEntry(message);
+});
+
 window.electronAPI.startRecording((event) => {
   startRecording();
 });
@@ -65,6 +69,43 @@ function logWithTimestamp(...message) {
   const timestamp = now.toISOString(); // Format: YYYY-MM-DDTHH:mm:ss.sssZ
   console.log(`[${timestamp}]`);
   console.log(...message);
+}
+
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  fractionalSecondDigits: 3,
+  hour12: false, // Force 24-hour format
+});
+function addTerminalEntry(message) {
+  document.getElementById('terminal-hint').classList.add('hidden');
+
+  const terminalOutput = document.getElementById('terminalOutput');
+
+  // Create the log entry container
+  const logEntry = document.createElement('div');
+  logEntry.className = 'log-entry';
+
+  // Create the timestamp element
+  const timestamp = document.createElement('span');
+  timestamp.className = 'timestamp';
+  timestamp.textContent = `[${dateFormatter.format(new Date())}]`;
+
+  // Create the message element
+  const messageSpan = document.createElement('span');
+  messageSpan.className = 'message';
+  messageSpan.textContent = message;
+
+  // Append timestamp and message to the log entry
+  logEntry.appendChild(timestamp);
+  logEntry.appendChild(messageSpan);
+
+  // Append the log entry to the terminal output
+  terminalOutput.appendChild(logEntry);
+
+  // Scroll to the bottom
+  terminalOutput.scrollTop = terminalOutput.scrollHeight;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

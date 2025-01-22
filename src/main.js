@@ -94,6 +94,8 @@ const server = net.createServer((clientSocket) => {
 
     const lines = message.split('\n');
     lines.forEach((line) => {
+      mainWindow.webContents.send('add-terminal-entry', line);
+
       const parts = line.split(' ');
 
       if (parts.length === 0) return;
