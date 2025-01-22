@@ -1,4 +1,5 @@
 let selectedDeviceId = null;
+let micStream = null;
 let mediaRecorder = null;
 let audioChunks = [];
 let audioContext =  new (window.AudioContext || window.webkitAudioContext)();
@@ -170,7 +171,31 @@ function setMic(value) {
     startMonitor();
   }
 
+  updateMicStream();
+
   localStorage.setItem('mic', value);
+}
+
+async function updateMicStream() {
+  // clean up old stream
+  try {
+    if (micStream)
+      micStream.getTracks().forEach(track => track.stop());
+  } catch (error) {
+    console.error('Error stopping old mic stream:', error);
+  }
+
+  logWithTimestamp('Updating mic stream...');
+  micStream = await navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined },
+  });
+  logWithTimestamp('Mic stream updated.');
+
+  // prewarm media recorder
+  const tempRecorder = new MediaRecorder(micStream);
+  tempRecorder.start();
+  tempRecorder.stop();
+  logWithTimestamp('Media recorder pre-warmed.');
 }
 
 function loadMic() {
@@ -182,11 +207,9 @@ function loadMic() {
 
 // Start recording
 async function startRecording() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined },
-  });
+  logWithTimestamp('Building Media Recorder...');
 
-  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder = new MediaRecorder(micStream);
   mediaRecorder.ondataavailable = (event) => {
     audioChunks.push(event.data);
   };
@@ -201,6 +224,8 @@ async function startRecording() {
 
     audioChunks = []; // Clear chunks for the next recording
   };
+
+  logWithTimestamp('Starting Media Recorder');
 
   mediaRecorder.start();
   logWithTimestamp('Recording started...');
