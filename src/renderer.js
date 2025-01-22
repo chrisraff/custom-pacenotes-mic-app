@@ -3,6 +3,8 @@ let mediaRecorder = null;
 let audioChunks = [];
 let audioContext =  new (window.AudioContext || window.webkitAudioContext)();
 
+let confirmSoundBuffer = null;
+
 window.electronAPI.updateStatus((event, status) => {
   document.getElementById('mission-path').textContent = `Mission Path: ${status.missionPath || 'Not set'}`;
   document.getElementById('output-path').textContent = `Output Path: ${status.outputPath || 'Not set'}`;
@@ -27,18 +29,36 @@ window.electronAPI.playSound(async (event, sound) => {
   try {
     const audioBuffer = await audioContext.decodeAudioData(sound.buffer);
 
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-
-    source.connect(audioContext.destination);
-
-    logWithTimestamp('Starting to play sound');
-
-    source.start();
+    playSound(audioBuffer);
   } catch (error) {
-    console.error('Error playing WAV data:', error);
+    console.error('Error playing sound data:', error);
   }
 });
+
+window.electronAPI.audioDataConfirm(async (event, data) => {
+  try {
+    confirmSoundBuffer = await audioContext.decodeAudioData(data.buffer);
+  } catch (error) {
+    console.error('Error decoding confirm sound data:', error);
+  }
+});
+
+window.electronAPI.audioPlayConfirm(async (event) => {
+  if (confirmSoundBuffer) {
+    playSound(confirmSoundBuffer);
+  }
+});
+
+async function playSound(buffer) {
+  const source = audioContext.createBufferSource();
+  source.buffer = buffer;
+
+  source.connect(audioContext.destination);
+
+  logWithTimestamp('Starting to play sound');
+
+  source.start();
+}
 
 function logWithTimestamp(...message) {
   const now = new Date();

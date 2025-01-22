@@ -65,7 +65,13 @@ app.whenReady().then(() => {
 
   mainWindow.loadFile('src/index.html');
 
-  guiUpdateStatus();
+  mainWindow.webContents.once('did-finish-load', () => {
+    guiUpdateStatus();
+
+    if (!!confirmSound) {
+      mainWindow.webContents.send('audio-data-confirm', confirmSound);
+    }
+  });
 });
 
 function logWithTimestamp(...message) {
@@ -255,8 +261,7 @@ async function convertWebmToOgg(rawWebmDataBuffer) {
           outputStream.end(); // Manually end the stream if no errors
           logWithTimestamp('ffmpeg operation completed');
 
-          if (confirmSound !== null)
-            mainWindow.webContents.send('play-sound', confirmSound);
+          mainWindow.webContents.send('audio-play-confirm');
         }
       })
       .pipe(outputStream, { end: false }); // Prevent auto-ending the output stream
