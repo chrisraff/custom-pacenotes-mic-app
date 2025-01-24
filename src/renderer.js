@@ -8,7 +8,7 @@ let confirmSoundBuffer = null;
 
 window.electronAPI.updateStatus((event, status) => {
   document.getElementById('mission-path').textContent = `Mission Path: ${status.missionPath || 'Not set'}`;
-  document.getElementById('output-path').textContent = `Output Path: ${status.outputPath || 'Not set'}`;
+  document.getElementById('output-path').textContent = `${status.outputPath || 'Not set'}`;
   document.getElementById('counter').textContent = `Counter: ${status.counter}`;
 
   document.getElementById('serverStatusMessage').textContent = status.hostingStatus;

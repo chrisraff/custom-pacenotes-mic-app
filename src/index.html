@@ -113,13 +113,16 @@
       color: var(--secondary-text-color);
     }
 
+    #output-path {
+      user-select: text;
+    }
+
     #terminal {
       flex: 1; /* Take up the remaining space in the main container */
       display: flex;
       flex-direction: column;
       background-color: var(--terminal-bg);
       color: var(--text-color);
-      /* padding: 10px; */
       overflow: hidden; /* Prevent content from overflowing the container */
     }
 
@@ -259,7 +262,7 @@
       <section id="detailsPane">
         <h2>Server Details</h2>
         <p id="mission-path">Mission Path: Not set</p>
-        <p id="output-path">Output Path: Not set</p>
+        <p>Output Path: <span id="output-path">Not set</span></p>
         <p id="counter">Counter: 0</p>
       </section>
      </section>
