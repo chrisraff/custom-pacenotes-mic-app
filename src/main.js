@@ -63,6 +63,9 @@ app.whenReady().then(() => {
     },
   });
 
+  if (!isDev)
+    mainWindow.removeMenu();
+
   mainWindow.loadFile('src/index.html');
 
   mainWindow.webContents.once('did-finish-load', () => {
