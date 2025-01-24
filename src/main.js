@@ -211,7 +211,6 @@ ipcMain.on('save-audio', async (_, arrayBuffer) => {
     logWithTimestamp('Pacenotes directory created:', pacenotesDir);
   }
 
-  // const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.wav`) : null;
   const filePath = pacenotesDir ? path.join(pacenotesDir, `pacenote_${pacenote_index}.ogg`) : null;
 
   if (filePath) {
