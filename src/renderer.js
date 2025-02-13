@@ -190,6 +190,10 @@ async function updateMicStream() {
   const noiseSuppression = document.getElementById('noiseSuppression').checked;
   const autoGainControl = document.getElementById('autoGain').checked;
 
+  localStorage.setItem('echoCancellation', echoCancellation);
+  localStorage.setItem('noiseSuppression', noiseSuppression);
+  localStorage.setItem('autoGainControl', autoGainControl);
+
   micStream = await navigator.mediaDevices.getUserMedia({
     audio: {
       deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
@@ -212,6 +216,18 @@ function loadMic() {
   if (savedMic) {
     setMic(savedMic);
   }
+}
+
+function loadAudioSettings() {
+  const echoCancellation = localStorage.getItem('echoCancellation') === 'true';
+  const noiseSuppression = localStorage.getItem('noiseSuppression') === 'true';
+  const autoGainControl = localStorage.getItem('autoGainControl') === 'true';
+
+  document.getElementById('echoCancellation').checked = echoCancellation;
+  document.getElementById('noiseSuppression').checked = noiseSuppression;
+  document.getElementById('autoGain').checked = autoGainControl;
+
+  logWithTimestamp('Loaded audio settings.');
 }
 
 // Start recording
@@ -367,4 +383,5 @@ function toggleTheme() {
 
 // Load preferences
 loadTheme();
+loadAudioSettings();
 loadMic();
