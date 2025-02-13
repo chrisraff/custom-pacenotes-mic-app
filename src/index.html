@@ -261,22 +261,38 @@
   <!-- Main Content -->
   <main>
     <!-- Mic Selection and Testing -->
-     <section class="flex-row">
-       <section id="statusPane">
-         <h2>Microphone Selection</h2>
-         <div style="display: flex; align-items: center;">
-           <select id="micSelect" style="flex-grow: 1; margin: 5px;"></select>
-           <button onclick="populateMicrophoneList()" style="flex-shrink: 0; margin: 5px;">🔃</button>
-         </div>
+    <section class="flex-row">
+      <section id="statusPane">
+        <h2>Microphone Selection</h2>
+        <div style="display: flex; align-items: center;">
+          <select id="micSelect" style="flex-grow: 1; margin: 5px;"></select>
+          <button onclick="populateMicrophoneList()" style="flex-shrink: 0; margin: 5px;">🔃</button>
+        </div>
 
-         <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
-         <div id="micTestData" class="hidden">
-           <span>Talk into your mic to check mic quality.</span>
-           <div id="volumeBar">
-             <div></div> <!-- Actual volume bar -->
-           </div>
-         </div>
-       </section>
+        <button id="micTest" onclick="toggleMicMonitor()">Start Mic Test</button>
+        <div id="micTestData" class="hidden">
+          <span>Talk into your mic to check mic quality.</span>
+          <div id="volumeBar">
+          <div></div> <!-- Actual volume bar -->
+          </div>
+        </div>
+
+        <h3>Audio Settings</h3>
+        <div class="flex-row" style="gap: 10px;">
+          <label>
+            <input type="checkbox" id="echoCancellation" onchange="updateMicStream()" />
+            Echo Cancellation
+          </label>
+          <label>
+            <input type="checkbox" id="noiseSuppression" onchange="updateMicStream()" />
+            Noise Suppression
+          </label>
+          <label>
+            <input type="checkbox" id="autoGain" onchange="updateMicStream()" />
+            Auto Gain
+          </label>
+        </div>
+      </section>
 
       <!-- Server Details Section -->
       <section id="detailsPane">

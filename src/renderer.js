@@ -186,8 +186,17 @@ async function updateMicStream() {
   }
 
   logWithTimestamp('Updating mic stream...');
+  const echoCancellation = document.getElementById('echoCancellation').checked;
+  const noiseSuppression = document.getElementById('noiseSuppression').checked;
+  const autoGainControl = document.getElementById('autoGain').checked;
+
   micStream = await navigator.mediaDevices.getUserMedia({
-    audio: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined },
+    audio: {
+      deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+      echoCancellation: echoCancellation,
+      noiseSuppression: noiseSuppression,
+      autoGainControl: autoGainControl
+    },
   });
   logWithTimestamp('Mic stream updated.');
 
