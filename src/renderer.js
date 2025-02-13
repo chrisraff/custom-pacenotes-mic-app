@@ -176,6 +176,14 @@ function setMic(value) {
   localStorage.setItem('mic', value);
 }
 
+function getAudioSettings() {
+  return {
+    echoCancellation: document.getElementById('echoCancellation').checked,
+    noiseSuppression: document.getElementById('noiseSuppression').checked,
+    autoGainControl: document.getElementById('autoGain').checked,
+  };
+}
+
 async function updateMicStream() {
   // clean up old stream
   try {
@@ -186,20 +194,17 @@ async function updateMicStream() {
   }
 
   logWithTimestamp('Updating mic stream...');
-  const echoCancellation = document.getElementById('echoCancellation').checked;
-  const noiseSuppression = document.getElementById('noiseSuppression').checked;
-  const autoGainControl = document.getElementById('autoGain').checked;
 
-  localStorage.setItem('echoCancellation', echoCancellation);
-  localStorage.setItem('noiseSuppression', noiseSuppression);
-  localStorage.setItem('autoGainControl', autoGainControl);
+  const audioSettings = getAudioSettings();
+
+  localStorage.setItem('echoCancellation', audioSettings.echoCancellation);
+  localStorage.setItem('noiseSuppression', audioSettings.noiseSuppression);
+  localStorage.setItem('autoGainControl', audioSettings.autoGainControl);
 
   micStream = await navigator.mediaDevices.getUserMedia({
     audio: {
       deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-      echoCancellation: echoCancellation,
-      noiseSuppression: noiseSuppression,
-      autoGainControl: autoGainControl
+      ...audioSettings
     },
   });
   logWithTimestamp('Mic stream updated.');
@@ -209,6 +214,11 @@ async function updateMicStream() {
   tempRecorder.start();
   tempRecorder.stop();
   logWithTimestamp('Media recorder pre-warmed.');
+
+  if (isMonitoring) {
+    stopMonitor();
+    startMonitor();
+  }
 }
 
 function loadMic() {
@@ -293,7 +303,10 @@ async function startMonitor() {
 
   // Access the microphone stream
   const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined },
+    audio: {
+      deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+    ...getAudioSettings()
+  },
   });
 
   // Create a source from the microphone stream

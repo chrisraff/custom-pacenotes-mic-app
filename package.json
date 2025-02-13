@@ -1,6 +1,6 @@
 {
   "name": "custom-pacenotes-mic-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "src/main.js",
   "author": "SouthernPotato",
   "description": "Microphone server for use with Custom Rally Pacenotes in BeamNG.drive",
